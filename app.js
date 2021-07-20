@@ -71,6 +71,73 @@ app.route("/articles")
   })
 });
 
+
+// request targeting specific article
+app.route("/articles/:articleTitle")
+.get(function(req,res){
+  Article.findOne({title: req.params.articleTitle}, function(err, foundArticle){
+    if (!err){
+      if(foundArticle){
+        res.send(foundArticle);
+      }else{
+        res.send("No articles matching that title was found.");
+      }
+    }else{
+      res.send(err);
+    }
+  })
+})
+.put(function(req,res){
+  // <ModelName>.update({field: condition}, {updates}, {overwrite: true}, function(err, results){});
+  Article.update(
+    {title: req.params.articleTitle},
+    {title: req.body.title, content: req.body.content},
+    {overwrite: true},
+    function(err){
+      if(!err){
+        res.send("Successfully updated article.");
+      }else{
+        res.send(err);
+      }
+    }
+  );
+})
+.patch(function(req,res){
+  // Only updates specific fields provided by request
+  Article.update(
+    {title: req.params.articleTitle},
+    {$set: req.body},
+    function(err){
+      if(!err){
+        res.send("Successfully updated article.");
+      }else{
+        res.send(err);
+      }
+    }
+  );
+})
+.delete(function(req,res){
+  // <ModelName>.deleteOne({conditions},function(err){});
+  Article.deleteOne(
+    {title: req.params.articleTitle}, 
+    function(err){
+      if (!err){
+        res.send("Successfully deleted article named: "+req.params.articleTitle + ", if it existed.");
+      }else{
+        res.send(err);
+      }
+    }
+  );
+});
+
 app.listen(3000, function() {
   console.log("Server started on port 3000");
+});
+
+// ISSUE: ctrl+c doesnt stop running express server on hyperjs every time
+// https://stackoverflow.com/questions/44788982/node-js-ctrl-c-doesnt-stop-server-after-starting-server-with-npm-start
+process.on('SIGINT', function() {
+  console.log( "\nGracefully shutting down from SIGINT (Ctrl-C)" );
+  // some other closing procedures go here
+  process.exit(1);
 });
